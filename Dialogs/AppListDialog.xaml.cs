@@ -10,16 +10,15 @@ using Image = Microsoft.UI.Xaml.Controls.Image;
 
 namespace WinDurango.UI.Dialogs
 {
-    public sealed partial class AppListDialog : ContentDialog
+    public sealed partial class AppListDialog
     {
-        public List<Package> Pkgs { get; set; } = new List<Package>();
-
+        public readonly List<Package> Packages;
+        
         public AppListDialog(List<Package> packages, bool multiSelect = false)
         {
-            this.Pkgs = packages;
+            Packages = packages;
 
             this.DataContext = this;
-
             this.InitializeComponent();
 
             if (multiSelect)
@@ -33,39 +32,36 @@ namespace WinDurango.UI.Dialogs
             appListView.MinWidth = Math.Max(App.MainWindow.Bounds.Width / 2, 500);
             appListView.MaxWidth = Math.Max(App.MainWindow.Bounds.Width / 2, 500);
 
-            var listView = (ListView)sender;
+            ListView listView = (ListView)sender;
 
-            foreach (var pkg in Pkgs)
+            foreach (Package package in Packages)
             {
-                var item = new ListViewItem();
-                item.MinWidth = 200;
-
-                var stackPanel = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal
-                };
+                ListViewItem item = new() { MinWidth = 200 };
+                StackPanel stackPanel = new() { Orientation = Orientation.Horizontal };
+                
+                Uri pkLogo = null;
 
                 // NOTE: DO NOT TOUCH THIS MAGICAL SHIT 
                 // it throws massive error if the image is invalid somehow or whatever...
-                Uri pkLogo = null;
                 try
                 {
-                    pkLogo = pkg.Logo;
-                } catch (Exception ex) {
-                    Logger.WriteError($"pkg.Logo threw {ex.GetType().ToString()} for {pkg.Id.FamilyName}");
+                    pkLogo = package.Logo;
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteError($"pkg.Logo threw {ex.GetType()} for {package.Id.FamilyName}");
                     Logger.WriteException(ex);
                 }
-
-                var packageLogo = new Image
+                
+                Image packageLogo = new()
                 {
                     Width = 64,
                     Height = 64,
                     Margin = new Thickness(5),
-                    Source = new BitmapImage(pkLogo ?? new Uri("ms-appx:///Assets/testimg.png"))
+                    Source = new BitmapImage(pkLogo ?? new Uri("ms-appx:///Assets/no_img64.png"))
                 };
-                //packageLogo.ImageFailed += LogoFailed;
-
-                var packageInfo = new StackPanel
+                
+                StackPanel packageInfo = new()
                 {
                     Orientation = Orientation.Vertical,
                     Margin = new Thickness(5)
@@ -74,22 +70,22 @@ namespace WinDurango.UI.Dialogs
                 string displayName;
                 try
                 {
-                    displayName = pkg.DisplayName;
+                    displayName = package.DisplayName;
                 }
                 catch (System.Runtime.InteropServices.COMException)
                 {
-                    displayName = pkg.Id.Name;
+                    displayName = package.Id.Name;
                 }
 
-                var packageName = new TextBlock
+                TextBlock packageName = new()
                 {
                     Text = displayName ?? "Unknown",
                     FontWeight = FontWeights.Bold
                 };
-
-                var publisherName = new TextBlock
+                
+                TextBlock publisherName = new()
                 {
-                    Text = pkg.PublisherDisplayName ?? "Unknown"
+                    Text = package.PublisherDisplayName ?? "Unknown"
                 };
 
                 packageInfo.Children.Add(packageName);
@@ -99,19 +95,10 @@ namespace WinDurango.UI.Dialogs
                 stackPanel.Children.Add(packageInfo);
 
                 item.Content = stackPanel;
-
-                item.Tag = pkg;
+                item.Tag = package;
 
                 listView.Items.Add(item);
             }
-        }
-
-
-
-        private void LogoFailed(object sender, ExceptionRoutedEventArgs e)
-        {
-            //var image = sender as Image;
-            //image.Source = new BitmapImage(new Uri("ms-appx:///Assets/testimg.png"));
         }
 
         private void AddToAppList(ContentDialog sender, ContentDialogButtonClickEventArgs args)

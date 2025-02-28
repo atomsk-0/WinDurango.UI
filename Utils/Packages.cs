@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
@@ -27,14 +28,20 @@ namespace WinDurango.UI.Utils
     public abstract class Packages
     {
         // TODO: Make these methods not use the GUI, instead just throw an exception and catch it in the area where the method is actually invoked.
+        
         /// <summary>
         /// Gets all the installed UWP packages on the system
         /// </summary>
         public static IEnumerable<Package> GetInstalledPackages()
         {
-            var sid = WindowsIdentity.GetCurrent().User?.Value;
+            string? sid = WindowsIdentity.GetCurrent().User?.Value;
+            if (sid == null)
+            {
+                Logger.WriteError("Sid is null in Package.GetInstalledPackages, returning empty");
+                return [];
+            }
 
-            var pm = new PackageManager();
+            PackageManager pm = new();
             return pm.FindPackagesForUser(sid);
         }
 

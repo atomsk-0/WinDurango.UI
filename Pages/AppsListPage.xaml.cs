@@ -64,13 +64,16 @@ namespace WinDurango.UI.Pages
             List<Windows.ApplicationModel.Package> uwpApps = Packages.GetInstalledPackages().ToList();
             if (uwpApps.Count <= 0)
             {
-                NoticeDialog dialog = new NoticeDialog("No UWP Apps have been found.");
+                NoticeDialog dialog = new("No UWP Apps have been found.");
                 await dialog.ShowAsync();
                 return;
             }
-            AppListDialog dl = new(uwpApps, true);
-            dl.Title = "Installed UWP apps";
-            dl.XamlRoot = this.Content.XamlRoot;
+            
+            AppListDialog dl = new(uwpApps, true)
+            {
+                Title = "Installed UWP apps",
+                XamlRoot = this.Content.XamlRoot
+            };
             await dl.ShowAsync();
         }
 
